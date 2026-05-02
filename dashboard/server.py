@@ -130,21 +130,6 @@ async def issue_livekit_token(identity: str = "guest"):
         .with_ttl(timedelta(minutes=30))
         .to_jwt()
     )
-    # Dispatch the Lettr agent to the room (LiveKit Agents v1.x explicit dispatch).
-    # Safe to call even if a dispatch already exists — duplicates are ignored by
-    # the server. Uses agent_name="lettr" matching WorkerOptions in agent/main.py.
-    try:
-        async with livekit_api.LiveKitAPI(
-            url=lk_url, api_key=api_key, api_secret=api_secret
-        ) as lk:
-            await lk.agent_dispatch.create_dispatch(
-                livekit_api.CreateAgentDispatchRequest(
-                    room=room,
-                    agent_name="lettr",
-                )
-            )
-    except Exception:
-        pass  # Best-effort: worker will still join once the room is created
     return {
         "token": token,
         "url": lk_url,
