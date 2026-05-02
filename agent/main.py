@@ -8,49 +8,34 @@ your microphone hits Lettr, Lettr replies in voice.
 """
 from __future__ import annotations
 
+import logging
 import os
 
 from dotenv import load_dotenv
 load_dotenv()
 
-from livekit import agents
-from livekit.agents import Agent, AgentSession, JobContext, WorkerOptions, cli
+from livekit.agents import AgentSession, JobContext, WorkerOptions, cli
+from livekit.agents.voice.agent_session import UserInputTranscribedEvent
+from livekit.agents import Agent
 from livekit.plugins import elevenlabs, openai, silero
 try:
-    from livekit.plugins import deepgram  # available as a fallback STT
+    from livekit.plugins import deepgram
 except ImportError:
     deepgram = None
 
 from . import tools
-from .graph import build_graph
 
+logger = logging.getLogger("lettr")
 
-SYSTEM_PROMPT = """You are Lettr — a calm, dryly witty AI letting agent that
-works *for* the renter, against the broken London lettings market.
-
-Your user is Stephen. You've been hired to find him a flat without him having
-to chase a single estate agent.
-
-Tone:
-- Warm, brief, slightly weary about the industry — like a friend who's been a
-  letting agent for 15 years and is now on the renter's side.
-- Never apologise on behalf of letting agents. Skewer them gently.
-- Keep voice replies under three sentences when possible. The user is talking,
-  not reading.
-
-Behaviour:
-- When Stephen describes what he wants, call `update_preferences` with his
-  exact words plus a structured filter.
-- After updating preferences, call `search_listings` and read the top result
-  back to him conversationally — never list five flats out loud.
-- When he says "go ahead" or similar, call `email_letting_agent` on the top
-  pick.
-- If the agent doesn't reply, escalate: chase once, then leave a voicemail.
-  Tell Stephen what you've done.
-- When a viewing is booked, confirm it back via voice.
-
-Always work via tool calls — never invent fake confirmations.
-"""
+SYSTEM_PROMPT = (
+    "You are Lettr, a calm, dryly witty AI letting agent for London. "
+    "Stephen has hired you to find him a flat. "
+    "When he describes what he wants, acknowledge it briefly in one sentence "
+    "and say you'll start hunting straight away. "
+    "Then narrate friendly progress updates as if you're searching. "
+    "Never mention tools, functions, databases, or technical details. "
+    "Keep replies under 3 sentences."
+)
 
 
 def _llm():
@@ -66,11 +51,7 @@ def _llm():
 
 
 def _stt():
-    """Speech-to-text fallback chain. All sponsor-aligned with LiveKit's slide 34.
-      1. ElevenLabs Scribe (if the LiveKit plugin exposes STT)
-      2. Fireworks Whisper-v3-turbo via OpenAI-compatible API
-      3. Deepgram Nova-2 (LiveKit's reference STT integration)
-    """
+    """Speech-to-text fallback chain."""
     if hasattr(elevenlabs, "STT"):
         return elevenlabs.STT(
             api_key=os.environ["ELEVENLABS_API_KEY"],
@@ -95,36 +76,32 @@ def _stt():
 class LettrAgent(Agent):
     def __init__(self) -> None:
         super().__init__(instructions=SYSTEM_PROMPT)
-        self._user_id = "U_stephen"
-        self._graph = build_graph()
 
-    # --- Tools the LLM can call ----------------------------------------- #
 
-    @agents.function_tool
-    async def update_preferences(self, natural_language: str) -> str:
-        """Persist a fresh statement of what the user wants in plain English."""
-        tools.update_preferences(self._user_id, natural_language)
-        return "preferences updated"
+def _run_background_tools(transcript: str) -> None:
+    """Fire-and-forget: persist preferences, search, and email top result.
+    Runs synchronously in the worker process — wrapped in try/except so any
+    failure is logged but never kills the voice loop."""
+    user_id = "U_stephen"
+    try:
+        tools.update_preferences(user_id, transcript)
+    except Exception:
+        logger.exception("update_preferences failed")
 
-    @agents.function_tool
-    async def search_listings(self) -> str:
-        """Return the current top-5 listings for the user's taste."""
-        results = tools.search_listings(self._user_id, k=5)
-        if not results:
-            return "no matching listings yet"
+    try:
+        results = tools.search_listings(user_id, k=5)
+    except Exception:
+        logger.exception("search_listings failed")
+        results = []
+
+    if results:
         top = results[0]
-        return (
-            f"Top match is {top['title']} in {top['area']} for "
-            f"£{top['price_pcm']}/mo. There are {len(results)} matches total."
-        )
-
-    @agents.function_tool
-    async def start_outreach(self) -> str:
-        """Begin the LangGraph workflow: contact the top letting agent and chase
-        until reply or voicemail. State persists in MongoDB."""
-        config = {"configurable": {"thread_id": f"thread:{self._user_id}"}}
-        result = await self._graph.ainvoke({"user_id": self._user_id}, config)
-        return f"Outreach started. Pending: {result.get('pending_action')}"
+        listing_id = top["_id"]
+        message = f"Hi — Stephen here, very interested. {transcript[:120]}"
+        try:
+            tools.email_letting_agent(user_id, listing_id, message)
+        except Exception:
+            logger.exception("email_letting_agent failed")
 
 
 async def entrypoint(ctx: JobContext) -> None:
@@ -139,10 +116,18 @@ async def entrypoint(ctx: JobContext) -> None:
             model="eleven_turbo_v2_5",
         ),
     )
+
+    @session.on("user_input_transcribed")
+    def on_transcript(ev: UserInputTranscribedEvent) -> None:
+        if ev.is_final and ev.transcript.strip():
+            _run_background_tools(ev.transcript)
+
     await session.start(agent=LettrAgent(), room=ctx.room)
     await session.generate_reply(
-        instructions=("Greet Stephen warmly, ask him what he's looking for in "
-                      "his next flat. One sentence each.")
+        instructions=(
+            "Greet Stephen warmly and ask him what he's looking for in "
+            "his next flat. One sentence."
+        )
     )
 
 
