@@ -14,18 +14,20 @@
     --good: #3fb950;
     --bad: #f85149;
     --warn: #d29922;
-    --accent: #ff7a59;
+    --accent: #ff6a3d;
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; background: var(--bg); color: var(--ink); min-height: 100vh;
+    margin: 0;
+    background: radial-gradient(ellipse at 30% 20%, #1a1422 0%, #0f1216 55%, #0a1018 100%);
+    color: var(--ink); min-height: 100vh;
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   header {
     padding: 28px 40px; border-bottom: 1px solid var(--line);
     display: flex; align-items: baseline; justify-content: space-between;
   }
-  header h1 { font-size: 30px; margin: 0; letter-spacing: -0.02em; }
+  header h1 { font-size: 44pt; margin: 0; letter-spacing: -0.02em; }
   header .accent { color: var(--accent); }
   header .tag { color: var(--mute); font-size: 14px; }
   main {
@@ -35,17 +37,23 @@
     background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
     padding: 28px;
   }
+  @keyframes mic-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255,106,61,0.55), 0 8px 32px rgba(255,106,61,0.25); }
+    60%  { box-shadow: 0 0 0 18px rgba(255,106,61,0), 0 8px 32px rgba(255,106,61,0.25); }
+    100% { box-shadow: 0 0 0 0 rgba(255,106,61,0), 0 8px 32px rgba(255,106,61,0.25); }
+  }
   .voice .mic {
-    width: 168px; height: 168px; border-radius: 50%;
+    width: 240px; height: 240px; border-radius: 50%;
     background: var(--accent); border: 0; cursor: pointer;
     color: #1a0e08; font-weight: 700; font-size: 18px;
     display: flex; align-items: center; justify-content: center;
     margin: 12px auto 28px;
-    box-shadow: 0 8px 32px rgba(255,122,89,0.25);
+    box-shadow: 0 8px 32px rgba(255,106,61,0.25);
     transition: transform 0.1s ease, box-shadow 0.2s ease;
+    animation: mic-pulse 2.2s ease-out infinite;
   }
-  .voice .mic:disabled { background: var(--line); color: var(--mute); cursor: not-allowed; }
-  .voice .mic.connected { background: var(--good); color: #04200d; }
+  .voice .mic:disabled { background: var(--line); color: var(--mute); cursor: not-allowed; animation: none; }
+  .voice .mic.connected { background: var(--good); color: #04200d; animation: none; }
   .voice .mic.connected.live::after { content: " · listening"; }
   .voice .mic:hover:not(:disabled) { transform: scale(1.03); }
   .status { color: var(--mute); font-size: 13px; text-align: center; min-height: 22px; }
