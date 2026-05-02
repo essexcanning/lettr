@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Lettr — talk to your AI letting agent</title>
+<title>Lettr — your AI letting agent</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
   :root {
@@ -23,75 +23,141 @@
     color: var(--ink); min-height: 100vh;
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
-  header {
-    padding: 28px 40px; border-bottom: 1px solid var(--line);
-    display: flex; align-items: baseline; justify-content: space-between;
+
+  /* ── Hero ── */
+  .hero {
+    padding: 56px 48px 40px;
+    border-bottom: 1px solid var(--line);
   }
-  header h1 { font-size: 44pt; margin: 0; letter-spacing: -0.02em; }
-  header .accent { color: var(--accent); }
-  header .tag { color: var(--mute); font-size: 14px; }
+  .hero h1 {
+    font-size: clamp(28px, 4vw, 48px);
+    margin: 0 0 14px;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    max-width: 720px;
+  }
+  .hero h1 em { color: var(--accent); font-style: normal; }
+  .hero .sub {
+    font-size: 17px; color: var(--mute); margin: 0;
+    letter-spacing: 0;
+  }
+
+  /* ── Layout ── */
   main {
-    display: grid; grid-template-columns: 1fr 1.2fr; gap: 28px; padding: 28px 40px;
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 32px;
+    padding: 36px 48px;
   }
+
+  /* ── Talk card ── */
   .card {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-    padding: 28px;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 36px;
   }
+  .voice .card-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--mute); margin: 0 0 28px;
+  }
+
   @keyframes mic-pulse {
     0%   { box-shadow: 0 0 0 0 rgba(255,106,61,0.55), 0 8px 32px rgba(255,106,61,0.25); }
-    60%  { box-shadow: 0 0 0 18px rgba(255,106,61,0), 0 8px 32px rgba(255,106,61,0.25); }
+    60%  { box-shadow: 0 0 0 20px rgba(255,106,61,0), 0 8px 32px rgba(255,106,61,0.25); }
     100% { box-shadow: 0 0 0 0 rgba(255,106,61,0), 0 8px 32px rgba(255,106,61,0.25); }
   }
   .voice .mic {
     width: 240px; height: 240px; border-radius: 50%;
     background: var(--accent); border: 0; cursor: pointer;
-    color: #1a0e08; font-weight: 700; font-size: 18px;
+    color: #1a0e08; font-weight: 700; font-size: 17px;
     display: flex; align-items: center; justify-content: center;
-    margin: 12px auto 28px;
+    margin: 0 auto 24px;
     box-shadow: 0 8px 32px rgba(255,106,61,0.25);
-    transition: transform 0.1s ease, box-shadow 0.2s ease;
+    transition: transform 0.1s ease;
     animation: mic-pulse 2.2s ease-out infinite;
   }
-  .voice .mic:disabled { background: var(--line); color: var(--mute); cursor: not-allowed; animation: none; }
+  .voice .mic:disabled {
+    background: var(--line); color: var(--mute);
+    cursor: not-allowed; animation: none;
+  }
   .voice .mic.connected { background: var(--good); color: #04200d; animation: none; }
-  .voice .mic.connected.live::after { content: " · listening"; }
   .voice .mic:hover:not(:disabled) { transform: scale(1.03); }
-  .status { color: var(--mute); font-size: 13px; text-align: center; min-height: 22px; }
-  .voice h2 { font-size: 16px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mute); margin: 0 0 12px; }
-  .voice p { color: var(--ink); line-height: 1.6; font-size: 15px; }
-  .voice ol { padding-left: 20px; line-height: 1.8; color: var(--ink); }
-  .voice .quote { font-style: italic; color: var(--mute); border-left: 2px solid var(--accent); padding-left: 14px; margin: 18px 0; }
-  iframe.dashboard { width: 100%; height: 720px; border: 0; border-radius: 12px; background: var(--panel); }
-  footer { padding: 18px 40px; color: var(--mute); font-size: 12px; border-top: 1px solid var(--line); }
-  footer a { color: var(--accent); text-decoration: none; }
-  @media (max-width: 920px) { main { grid-template-columns: 1fr; } iframe.dashboard { height: 600px; } }
 
-  /* Welcome modal */
+  .status {
+    color: var(--mute); font-size: 13px;
+    text-align: center; min-height: 20px; margin-bottom: 32px;
+  }
+
+  /* ── Three-step rows ── */
+  .steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+  .steps li {
+    display: flex; align-items: center; gap: 14px;
+    font-size: 15px; color: var(--ink); line-height: 1.4;
+  }
+  .steps li .icon {
+    font-size: 22px; flex-shrink: 0; width: 34px; text-align: center;
+  }
+
+  /* ── Dashboard panel ── */
+  .dash-panel { display: flex; flex-direction: column; gap: 12px; }
+  .dash-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--mute); margin: 0;
+  }
+  .dash-explain {
+    font-size: 13px; color: var(--mute); line-height: 1.55; margin: 0;
+  }
+  iframe.dashboard {
+    width: 100%; height: 700px; border: 0;
+    border-radius: 12px; background: var(--panel);
+    border: 1px solid var(--line);
+  }
+
+  /* ── Footer ── */
+  footer {
+    padding: 20px 48px; color: var(--mute); font-size: 12px;
+    border-top: 1px solid var(--line);
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 960px) {
+    main { grid-template-columns: 1fr; padding: 24px; }
+    .hero { padding: 36px 24px 28px; }
+    iframe.dashboard { height: 560px; }
+  }
+
+  /* ── Welcome modal ── */
   .modal-overlay {
     position: fixed; inset: 0; z-index: 1000;
-    background: rgba(10, 12, 16, 0.80);
+    background: rgba(10, 12, 16, 0.82);
     backdrop-filter: blur(4px);
     display: flex; align-items: center; justify-content: center;
   }
   .modal-overlay.hidden { display: none; }
   .modal {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
-    padding: 40px; max-width: 480px; width: 90%;
-    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 16px; padding: 44px;
+    max-width: 500px; width: 92%;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.55);
   }
   .modal h2 {
-    margin: 0 0 16px; font-size: 26px; letter-spacing: -0.02em;
-    color: var(--ink);
+    margin: 0 0 16px; font-size: 26px;
+    letter-spacing: -0.02em; color: var(--ink);
   }
   .modal h2 span { color: var(--accent); }
-  .modal p { color: var(--ink); line-height: 1.65; font-size: 15px; margin: 0 0 16px; }
+  .modal p {
+    color: var(--ink); line-height: 1.65;
+    font-size: 15px; margin: 0 0 16px;
+  }
   .modal .suggestion {
     font-style: italic; font-size: 13px; color: var(--mute);
-    border-left: 2px solid var(--accent); padding-left: 12px; margin: 0 0 28px;
+    border-left: 2px solid var(--accent);
+    padding-left: 12px; margin: 0 0 28px;
   }
   .modal button {
-    background: var(--accent); color: #1a0e08; border: 0; border-radius: 8px;
-    padding: 12px 32px; font-size: 15px; font-weight: 700; cursor: pointer;
+    background: var(--accent); color: #1a0e08;
+    border: 0; border-radius: 8px;
+    padding: 12px 32px; font-size: 15px;
+    font-weight: 700; cursor: pointer;
     transition: opacity 0.15s ease;
   }
   .modal button:hover { opacity: 0.88; }
@@ -108,46 +174,41 @@
   </div>
 </div>
 
-<header>
-  <h1>Lettr <span class="accent">·</span> your AI letting agent</h1>
-  <span class="tag">London. Voice-first. Built today.</span>
-</header>
+<div class="hero">
+  <h1>Hate dealing with London letting agents?<br><em>Lettr does it for you.</em></h1>
+  <p class="sub">Voice-first. Talks to estate agents on your behalf. Calls them when they ghost.</p>
+</div>
+
 <main>
   <section class="card voice">
-    <h2>Talk to Lettr</h2>
+    <p class="card-label">Talk to Lettr</p>
     <button id="mic" class="mic" disabled>Connecting…</button>
     <div class="status" id="status">Loading…</div>
-    <p>Press and hold to speak. Lettr will listen, ask clarifying questions, and start hunting.</p>
-    <div class="quote">"I'm Stephen. I want a 1-bed in zones 1–2, under £2,400, by mid-June, good light, quiet street, pet considered."</div>
-    <p>What happens after you talk:</p>
-    <ol>
-      <li>Lettr stores your taste vector in MongoDB Atlas Vector Search.</li>
-      <li>Searches 30 London listings against it, picks the top match.</li>
-      <li>Emails the letting agent on your behalf.</li>
-      <li>If the agent ghosts, Lettr <strong>calls them</strong> with a polite voicemail.</li>
-      <li>Reports back via voice, and tracks every interaction in the reputation graph →</li>
-    </ol>
+    <ul class="steps">
+      <li><span class="icon">🎯</span> Tell Lettr what you want</li>
+      <li><span class="icon">📞</span> Lettr searches and contacts agents</li>
+      <li><span class="icon">🔊</span> When they ghost, Lettr calls them</li>
+    </ul>
   </section>
 
-  <section>
-    <iframe class="dashboard" id="dash" title="Lettr reputation dashboard"></iframe>
+  <section class="dash-panel">
+    <p class="dash-label">What Lettr has learned</p>
+    <p class="dash-explain">Community reputation — what Lettr has observed across simulated London enquiries. New activity from your session feeds in too.</p>
+    <iframe class="dashboard" id="dash" title="What Lettr has learned"></iframe>
   </section>
 </main>
+
 <footer>
   Built at the MongoDB Agentic Evolution Hackathon, London · 2 May 2026 ·
-  Stack: MongoDB Atlas Vector Search + LangGraph (with MongoDB Checkpointer) +
-  LiveKit + ElevenLabs + Fireworks AI · Repo:
+  Stack: MongoDB Atlas Vector Search + LangGraph + LiveKit + ElevenLabs + Fireworks AI ·
   <a href="https://github.com/essexcanning/lettr">github.com/essexcanning/lettr</a>
 </footer>
 
 <!-- LiveKit Web SDK -->
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.5.10/dist/livekit-client.umd.min.js"></script>
 <script>
-// Same-origin by default — the FastAPI server hosts both this page and the
-// API. Override via ?api=https://... only when testing against a different
-// backend.
 const params = new URLSearchParams(location.search);
-const API_BASE = params.get("api") || "";  // "" = same origin
+const API_BASE = params.get("api") || "";
 
 document.getElementById("dash").src = (API_BASE || "") + "/dashboard";
 
@@ -165,16 +226,11 @@ async function connect() {
   }
   const { token, url } = await res.json();
 
-  status.textContent = "Connecting to LiveKit…";
-  room = new LivekitClient.Room({
-    adaptiveStream: true,
-    dynacast: true,
-  });
+  status.textContent = "Connecting…";
+  room = new LivekitClient.Room({ adaptiveStream: true, dynacast: true });
 
   room.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
-    if (track.kind === "audio") {
-      track.attach();
-    }
+    if (track.kind === "audio") track.attach();
   });
   room.on(LivekitClient.RoomEvent.Disconnected, () => {
     mic.classList.remove("connected", "live");
@@ -185,9 +241,9 @@ async function connect() {
   try {
     await room.connect(url, token);
     await room.localParticipant.setMicrophoneEnabled(true);
-    mic.classList.add("connected");
-    mic.textContent = "Connected · click to mute";
-    status.textContent = "You're live. Say hi.";
+    mic.classList.add("connected", "live");
+    mic.textContent = "Listening";
+    status.textContent = "You're live — say hi to Lettr.";
   } catch (e) {
     status.textContent = "Connect failed: " + e.message;
   }
@@ -201,6 +257,7 @@ mic.addEventListener("click", async () => {
   const newState = !room.localParticipant.isMicrophoneEnabled;
   await room.localParticipant.setMicrophoneEnabled(newState);
   mic.classList.toggle("live", newState);
+  mic.textContent = newState ? "Listening" : "Muted — click to talk";
   status.textContent = newState ? "Listening…" : "Muted.";
 });
 
