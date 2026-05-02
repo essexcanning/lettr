@@ -43,16 +43,23 @@ You (voice) ── WebRTC ──► LiveKit Agent ──► LangGraph state mach
 - **LangGraph + LangSmith** — orchestration and visible tracing
 - **Deepgram** — STT
 
-## Run locally
+## Run locally (one process)
 
 ```bash
 pip install -r requirements.txt
-cp .env.example .env  # fill in keys
+cp .env.example .env   # fill in keys
 python scripts/seed_mongo.py
-python -m agent.main dev
+bash run.sh            # boots dashboard + agent worker together
 ```
 
-Then open the LiveKit playground at https://agents-playground.livekit.io and connect with your project URL.
+Then open `http://localhost:8000` for the renter-facing voice UI.
+
+## Deploy
+
+Single Replit project hosts everything: the FastAPI dashboard at `/`, the
+voice frontend at `/` (same page), the reputation dashboard at `/dashboard`,
+the LiveKit guest-token endpoint at `/api/livekit-token`, and the agent
+worker registers with LiveKit Cloud as a background process. One URL.
 
 ## Hackathon notes
 

@@ -95,12 +95,13 @@
 <!-- LiveKit Web SDK -->
 <script src="https://unpkg.com/livekit-client@2/dist/livekit-client.umd.min.js"></script>
 <script>
-// Configurable: where the dashboard / token endpoint is hosted.
-// Override via ?api=https://... in the URL when testing different deploys.
+// Same-origin by default — the FastAPI server hosts both this page and the
+// API. Override via ?api=https://... only when testing against a different
+// backend.
 const params = new URLSearchParams(location.search);
-const API_BASE = params.get("api") || "https://lettr.replit.app";
+const API_BASE = params.get("api") || "";  // "" = same origin
 
-document.getElementById("dash").src = API_BASE + "/";
+document.getElementById("dash").src = (API_BASE || "") + "/dashboard";
 
 const mic = document.getElementById("mic");
 const status = document.getElementById("status");
@@ -109,7 +110,7 @@ let room = null;
 
 async function connect() {
   status.textContent = "Fetching token…";
-  const res = await fetch(API_BASE + "/api/livekit-token?identity=guest-" + Math.floor(Math.random()*9999));
+  const res = await fetch((API_BASE || "") + "/api/livekit-token?identity=guest-" + Math.floor(Math.random()*9999));
   if (!res.ok) {
     status.textContent = "Couldn't fetch token: " + res.status;
     return;

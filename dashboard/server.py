@@ -31,6 +31,7 @@ from agent import simulator
 
 ROOT = Path(__file__).resolve().parents[1]
 INDEX_HTML = ROOT / "dashboard" / "index.html"
+TALK_HTML = ROOT / "web" / "index.html"
 AUDIO_DIR = ROOT / "audio_out"
 
 app = FastAPI(title="Lettr Reputation Dashboard")
@@ -52,7 +53,20 @@ def start_simulator() -> None:
 
 @app.get("/", response_class=HTMLResponse)
 def index() -> str:
+    """The renter-facing landing page with the mic button."""
+    return TALK_HTML.read_text()
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard() -> str:
+    """The reputation dashboard (embedded in the landing page as an iframe)."""
     return INDEX_HTML.read_text()
+
+
+@app.get("/talk", response_class=HTMLResponse)
+def talk_alias() -> str:
+    """Alias for /."""
+    return TALK_HTML.read_text()
 
 
 @app.get("/api/agents")
