@@ -47,6 +47,7 @@ def _llm():
             "FIREWORKS_MODEL",
             "accounts/fireworks/models/llama-v3p3-70b-instruct",
         ),
+        tool_choice="none",
     )
 
 
