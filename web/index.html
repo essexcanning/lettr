@@ -65,9 +65,49 @@
   footer { padding: 18px 40px; color: var(--mute); font-size: 12px; border-top: 1px solid var(--line); }
   footer a { color: var(--accent); text-decoration: none; }
   @media (max-width: 920px) { main { grid-template-columns: 1fr; } iframe.dashboard { height: 600px; } }
+
+  /* Welcome modal */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(10, 12, 16, 0.80);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+    padding: 40px; max-width: 480px; width: 90%;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  }
+  .modal h2 {
+    margin: 0 0 16px; font-size: 26px; letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .modal h2 span { color: var(--accent); }
+  .modal p { color: var(--ink); line-height: 1.65; font-size: 15px; margin: 0 0 16px; }
+  .modal .suggestion {
+    font-style: italic; font-size: 13px; color: var(--mute);
+    border-left: 2px solid var(--accent); padding-left: 12px; margin: 0 0 28px;
+  }
+  .modal button {
+    background: var(--accent); color: #1a0e08; border: 0; border-radius: 8px;
+    padding: 12px 32px; font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  .modal button:hover { opacity: 0.88; }
 </style>
 </head>
 <body>
+
+<div class="modal-overlay" id="welcome-overlay">
+  <div class="modal">
+    <h2>Welcome to <span>Lettr</span></h2>
+    <p>Lettr is your AI letting agent for London. You speak — Lettr listens, searches listings, and contacts letting agents on your behalf. When they ghost, Lettr calls them with a polite voicemail. Every interaction feeds a public reputation database.</p>
+    <p class="suggestion">Try saying: I want a 1-bed in zones 1–2, under £2,400, by mid-June, good light, quiet street, pet considered.</p>
+    <button id="welcome-dismiss">Got it</button>
+  </div>
+</div>
+
 <header>
   <h1>Lettr <span class="accent">·</span> your AI letting agent</h1>
   <span class="tag">London. Voice-first. Built today.</span>
@@ -163,6 +203,18 @@ mic.addEventListener("click", async () => {
   mic.classList.toggle("live", newState);
   status.textContent = newState ? "Listening…" : "Muted.";
 });
+
+// Welcome modal
+(function () {
+  const overlay = document.getElementById("welcome-overlay");
+  if (localStorage.getItem("lettr_onboarded") === "1") {
+    overlay.classList.add("hidden");
+  }
+  document.getElementById("welcome-dismiss").addEventListener("click", function () {
+    localStorage.setItem("lettr_onboarded", "1");
+    overlay.classList.add("hidden");
+  });
+})();
 
 // Boot
 mic.disabled = false;
