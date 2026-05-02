@@ -110,11 +110,12 @@ def audio(filename: str):
 
 
 @app.get("/api/livekit-token")
-def issue_livekit_token(identity: str = "guest"):
+async def issue_livekit_token(identity: str = "guest"):
     """Issue a short-lived LiveKit JWT so an anonymous browser can join Lettr's
     room. Used by the public frontend on Vercel to talk to the agent worker."""
     api_key = os.environ["LIVEKIT_API_KEY"]
     api_secret = os.environ["LIVEKIT_API_SECRET"]
+    lk_url = os.environ["LIVEKIT_URL"]
     room = "lettr-room"
     token = (
         livekit_api.AccessToken(api_key, api_secret)
@@ -129,9 +130,24 @@ def issue_livekit_token(identity: str = "guest"):
         .with_ttl(timedelta(minutes=30))
         .to_jwt()
     )
+    # Dispatch the Lettr agent to the room (LiveKit Agents v1.x explicit dispatch).
+    # Safe to call even if a dispatch already exists — duplicates are ignored by
+    # the server. Uses agent_name="lettr" matching WorkerOptions in agent/main.py.
+    try:
+        async with livekit_api.LiveKitAPI(
+            url=lk_url, api_key=api_key, api_secret=api_secret
+        ) as lk:
+            await lk.agent_dispatch.create_dispatch(
+                livekit_api.CreateAgentDispatchRequest(
+                    room=room,
+                    agent_name="lettr",
+                )
+            )
+    except Exception:
+        pass  # Best-effort: worker will still join once the room is created
     return {
         "token": token,
-        "url": os.environ["LIVEKIT_URL"],
+        "url": lk_url,
         "room": room,
         "identity": identity,
     }
