@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Lettr — talk to your AI letting agent</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --bg: #0f1216;
+    --panel: #161b22;
+    --line: #232a33;
+    --ink: #e6edf3;
+    --mute: #8b949e;
+    --good: #3fb950;
+    --bad: #f85149;
+    --warn: #d29922;
+    --accent: #ff7a59;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink); min-height: 100vh;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  header {
+    padding: 28px 40px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: baseline; justify-content: space-between;
+  }
+  header h1 { font-size: 30px; margin: 0; letter-spacing: -0.02em; }
+  header .accent { color: var(--accent); }
+  header .tag { color: var(--mute); font-size: 14px; }
+  main {
+    display: grid; grid-template-columns: 1fr 1.2fr; gap: 28px; padding: 28px 40px;
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 28px;
+  }
+  .voice .mic {
+    width: 168px; height: 168px; border-radius: 50%;
+    background: var(--accent); border: 0; cursor: pointer;
+    color: #1a0e08; font-weight: 700; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 12px auto 28px;
+    box-shadow: 0 8px 32px rgba(255,122,89,0.25);
+    transition: transform 0.1s ease, box-shadow 0.2s ease;
+  }
+  .voice .mic:disabled { background: var(--line); color: var(--mute); cursor: not-allowed; }
+  .voice .mic.connected { background: var(--good); color: #04200d; }
+  .voice .mic.connected.live::after { content: " · listening"; }
+  .voice .mic:hover:not(:disabled) { transform: scale(1.03); }
+  .status { color: var(--mute); font-size: 13px; text-align: center; min-height: 22px; }
+  .voice h2 { font-size: 16px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mute); margin: 0 0 12px; }
+  .voice p { color: var(--ink); line-height: 1.6; font-size: 15px; }
+  .voice ol { padding-left: 20px; line-height: 1.8; color: var(--ink); }
+  .voice .quote { font-style: italic; color: var(--mute); border-left: 2px solid var(--accent); padding-left: 14px; margin: 18px 0; }
+  iframe.dashboard { width: 100%; height: 720px; border: 0; border-radius: 12px; background: var(--panel); }
+  footer { padding: 18px 40px; color: var(--mute); font-size: 12px; border-top: 1px solid var(--line); }
+  footer a { color: var(--accent); text-decoration: none; }
+  @media (max-width: 920px) { main { grid-template-columns: 1fr; } iframe.dashboard { height: 600px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lettr <span class="accent">·</span> your AI letting agent</h1>
+  <span class="tag">London. Voice-first. Built today.</span>
+</header>
+<main>
+  <section class="card voice">
+    <h2>Talk to Lettr</h2>
+    <button id="mic" class="mic" disabled>Connecting…</button>
+    <div class="status" id="status">Loading…</div>
+    <p>Press and hold to speak. Lettr will listen, ask clarifying questions, and start hunting.</p>
+    <div class="quote">"I'm Stephen. I want a 1-bed in zones 1–2, under £2,400, by mid-June, good light, quiet street, pet considered."</div>
+    <p>What happens after you talk:</p>
+    <ol>
+      <li>Lettr stores your taste vector in MongoDB Atlas Vector Search.</li>
+      <li>Searches 30 London listings against it, picks the top match.</li>
+      <li>Emails the letting agent on your behalf.</li>
+      <li>If the agent ghosts, Lettr <strong>calls them</strong> with a polite voicemail.</li>
+      <li>Reports back via voice, and tracks every interaction in the reputation graph →</li>
+    </ol>
+  </section>
+
+  <section>
+    <iframe class="dashboard" id="dash" title="Lettr reputation dashboard"></iframe>
+  </section>
+</main>
+<footer>
+  Built at the MongoDB Agentic Evolution Hackathon, London · 2 May 2026 ·
+  Stack: MongoDB Atlas Vector Search + LangGraph (with MongoDB Checkpointer) +
+  LiveKit + ElevenLabs + Fireworks AI · Repo:
+  <a href="https://github.com/essexcanning/lettr">github.com/essexcanning/lettr</a>
+</footer>
+
+<!-- LiveKit Web SDK -->
+<script src="https://unpkg.com/livekit-client@2/dist/livekit-client.umd.min.js"></script>
+<script>
+// Configurable: where the dashboard / token endpoint is hosted.
+// Override via ?api=https://... in the URL when testing different deploys.
+const params = new URLSearchParams(location.search);
+const API_BASE = params.get("api") || "https://lettr.replit.app";
+
+document.getElementById("dash").src = API_BASE + "/";
+
+const mic = document.getElementById("mic");
+const status = document.getElementById("status");
+
+let room = null;
+
+async function connect() {
+  status.textContent = "Fetching token…";
+  const res = await fetch(API_BASE + "/api/livekit-token?identity=guest-" + Math.floor(Math.random()*9999));
+  if (!res.ok) {
+    status.textContent = "Couldn't fetch token: " + res.status;
+    return;
+  }
+  const { token, url } = await res.json();
+
+  status.textContent = "Connecting to LiveKit…";
+  room = new LivekitClient.Room({
+    adaptiveStream: true,
+    dynacast: true,
+  });
+
+  room.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+    if (track.kind === "audio") {
+      track.attach();
+    }
+  });
+  room.on(LivekitClient.RoomEvent.Disconnected, () => {
+    mic.classList.remove("connected", "live");
+    mic.textContent = "Talk to Lettr";
+    status.textContent = "Disconnected. Click to reconnect.";
+  });
+
+  try {
+    await room.connect(url, token);
+    await room.localParticipant.setMicrophoneEnabled(true);
+    mic.classList.add("connected");
+    mic.textContent = "Connected · click to mute";
+    status.textContent = "You're live. Say hi.";
+  } catch (e) {
+    status.textContent = "Connect failed: " + e.message;
+  }
+}
+
+mic.addEventListener("click", async () => {
+  if (!room) {
+    await connect();
+    return;
+  }
+  const newState = !room.localParticipant.isMicrophoneEnabled;
+  await room.localParticipant.setMicrophoneEnabled(newState);
+  mic.classList.toggle("live", newState);
+  status.textContent = newState ? "Listening…" : "Muted.";
+});
+
+// Boot
+mic.disabled = false;
+mic.textContent = "Talk to Lettr";
+status.textContent = "Click the mic to start.";
+</script>
+</body>
+</html>

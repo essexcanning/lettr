@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Lettr — Reputation Dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --bg: #0f1216;
+    --panel: #161b22;
+    --line: #232a33;
+    --ink: #e6edf3;
+    --mute: #8b949e;
+    --good: #3fb950;
+    --bad: #f85149;
+    --warn: #d29922;
+    --accent: #ff7a59;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  header {
+    padding: 24px 32px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: baseline; gap: 16px;
+  }
+  header h1 { font-size: 28px; margin: 0; letter-spacing: -0.02em; }
+  header .tag { color: var(--mute); font-size: 14px; }
+  header .accent { color: var(--accent); }
+  main { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; padding: 24px 32px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; }
+  section h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mute); margin: 0 0 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { color: var(--mute); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  tr:last-child td { border-bottom: 0; }
+  .score { font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+  .s-good { background: rgba(63,185,80,0.15); color: var(--good); }
+  .s-mid { background: rgba(210,153,34,0.15); color: var(--warn); }
+  .s-bad { background: rgba(248,81,73,0.15); color: var(--bad); }
+  .flag { display: inline-block; font-size: 11px; padding: 2px 6px; border-radius: 999px;
+          background: rgba(248,81,73,0.18); color: var(--bad); margin-left: 6px; }
+  .timeline { display: flex; flex-direction: column; gap: 10px; max-height: 70vh; overflow-y: auto; }
+  .event { padding: 10px 12px; border-radius: 8px; background: #0e1218; border: 1px solid var(--line); }
+  .event .meta { color: var(--mute); font-size: 11px; }
+  .event .body { font-size: 13px; margin-top: 4px; }
+  .event.outbound { border-left: 2px solid var(--accent); }
+  .event.voicemail { border-left: 2px solid var(--warn); }
+  .event.inbound { border-left: 2px solid var(--good); }
+  .controls { margin-top: 12px; display: flex; gap: 8px; }
+  button { background: var(--accent); color: #1a0e08; border: 0; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+  button.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+  audio { width: 100%; margin-top: 6px; }
+  .pref { font-size: 13px; line-height: 1.5; }
+  .pref strong { color: var(--accent); }
+  .small { font-size: 12px; color: var(--mute); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lettr <span class="accent">·</span> reputation dashboard</h1>
+  <span class="tag">London letting agents, observed and scored. <span id="version-tag"></span></span>
+</header>
+<main>
+  <section>
+    <h2>Letting agents — overall reputation</h2>
+    <table id="agents">
+      <thead>
+        <tr><th>Agent</th><th>Agency</th><th>Enquiries</th><th>Reply rate</th><th>Voicemails</th><th>Reliability</th><th>Overall</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="controls">
+      <button id="timelapse">Fast-forward 5 days</button>
+      <button class="ghost" id="refresh">Refresh now</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Live activity</h2>
+    <div class="timeline" id="timeline"></div>
+  </section>
+
+  <section style="grid-column: 1 / -1;">
+    <h2>Stephen's taste vector</h2>
+    <div id="pref" class="pref"></div>
+  </section>
+</main>
+
+<script>
+function score(v) {
+  if (v >= 0.75) return "s-good";
+  if (v >= 0.45) return "s-mid";
+  return "s-bad";
+}
+
+async function refresh() {
+  const [agents, timeline, pref] = await Promise.all([
+    fetch("/api/agents").then(r => r.json()),
+    fetch("/api/timeline").then(r => r.json()),
+    fetch("/api/preferences").then(r => r.json()),
+  ]);
+
+  const tbody = document.querySelector("#agents tbody");
+  tbody.innerHTML = "";
+  agents.forEach(a => {
+    const flags = (a.flags || []).map(f => `<span class="flag">${f.replace(/_/g," ")}</span>`).join("");
+    const rep = a.scores?.responsiveness ?? 0;
+    const rel = a.scores?.reliability ?? 0;
+    const ov  = a.scores?.overall ?? 0;
+    tbody.insertAdjacentHTML("beforeend", `
+      <tr>
+        <td>${a.agent_name}${flags}</td>
+        <td>${a.agency}</td>
+        <td>${a.stats.total_enquiries}</td>
+        <td><span class="score ${score(rep)}">${(rep*100|0)}%</span></td>
+        <td>${a.stats.voicemails_left} left · ${a.stats.voicemails_answered} answered</td>
+        <td><span class="score ${score(rel)}">${(rel*100|0)}%</span></td>
+        <td><span class="score ${score(ov)}">${(ov*100|0)}%</span></td>
+      </tr>
+    `);
+  });
+
+  const tl = document.getElementById("timeline");
+  tl.innerHTML = "";
+  timeline.forEach(e => {
+    const cls = e.channel === "voicemail" ? "voicemail" : e.direction;
+    const audio = e.audio_url ? `<audio controls src="${e.audio_url}"></audio>` : "";
+    tl.insertAdjacentHTML("beforeend", `
+      <div class="event ${cls}">
+        <div class="meta">${e.at} · ${e.direction.toUpperCase()} · ${e.channel}${e.agent_id ? " · " + e.agent_id : ""}${e.listing_id ? " · " + e.listing_id : ""}</div>
+        <div class="body">${(e.body || "").replace(/</g,"&lt;")}</div>
+        ${audio}
+      </div>
+    `);
+  });
+
+  const p = document.getElementById("pref");
+  if (pref && pref.natural_language) {
+    p.innerHTML = `
+      <div>“${pref.natural_language}”</div>
+      <div class="small">Taste version <strong>${pref.version}</strong> · ${pref.taste_versions_seen} updates so far · last refresh ${pref.as_of}</div>
+    `;
+    document.getElementById("version-tag").textContent = `Taste v${pref.version}`;
+  }
+}
+
+document.getElementById("refresh").onclick = refresh;
+document.getElementById("timelapse").onclick = async () => {
+  await fetch("/demo/timelapse", {method: "POST"});
+  refresh();
+};
+
+refresh();
+setInterval(refresh, 3000);
+</script>
+</body>
+</html>

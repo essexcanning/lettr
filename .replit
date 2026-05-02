@@ -1,0 +1,13 @@
+run = "bash run.sh"
+entrypoint = "dashboard/server.py"
+
+[nix]
+channel = "stable-23_11"
+
+[deployment]
+run = ["bash", "run.sh"]
+deploymentTarget = "cloudrun"
+
+[[ports]]
+localPort = 8000
+externalPort = 80

@@ -1,0 +1,174 @@
+[
+  {
+    "id": "AG001",
+    "agent_name": "Marcus Hale",
+    "agency": "Skyline Lettings",
+    "phone": "+44 20 7946 0011",
+    "email": "marcus.hale@skyline-lettings.demo",
+    "persona": "the_ghoster",
+    "behaviour": {
+      "response_delay_hours": 96,
+      "ghost_probability": 0.85,
+      "honesty_score": 0.40,
+      "follow_ups_required_to_get_reply": 4,
+      "responds_to_voicemail": true,
+      "viewings_kept_rate": 0.55
+    },
+    "templates": {
+      "first_response": "Hi, thanks for your enquiry. I'll get back to you with availability soon.",
+      "ghost_silence": null,
+      "after_voicemail": "Apologies, just got your voicemail. We can do a viewing Thursday 2pm if that still works?",
+      "objection": "That property has had a lot of interest. Can you confirm income and references?"
+    },
+    "notes": "Prolific ghoster. Only ever moves when chased multiple times. Voicemail almost always works."
+  },
+  {
+    "id": "AG002",
+    "agent_name": "Priya Patel",
+    "agency": "Atlas & Knight",
+    "phone": "+44 20 7946 0022",
+    "email": "priya@atlas-knight.demo",
+    "persona": "the_quick_and_honest",
+    "behaviour": {
+      "response_delay_hours": 2,
+      "ghost_probability": 0.05,
+      "honesty_score": 0.95,
+      "follow_ups_required_to_get_reply": 1,
+      "responds_to_voicemail": true,
+      "viewings_kept_rate": 0.95
+    },
+    "templates": {
+      "first_response": "Hi Stephen — thanks for the enquiry. The flat is still available, viewings tomorrow 10–4 in 30-min slots. Want me to book one?",
+      "objection": "Happy to talk through the lease, what's your concern?"
+    },
+    "notes": "Gold standard. The control case in the demo. Lettr should reward her in the reputation graph."
+  },
+  {
+    "id": "AG003",
+    "agent_name": "Daniel Wright",
+    "agency": "Bracken Property",
+    "phone": "+44 20 7946 0033",
+    "email": "dan.wright@bracken.demo",
+    "persona": "the_over_promiser",
+    "behaviour": {
+      "response_delay_hours": 12,
+      "ghost_probability": 0.30,
+      "honesty_score": 0.55,
+      "follow_ups_required_to_get_reply": 2,
+      "responds_to_voicemail": true,
+      "viewings_kept_rate": 0.65
+    },
+    "templates": {
+      "first_response": "Hi! Definitely available, lovely flat, you'll love it. I'll send some times shortly.",
+      "ghost_silence": null,
+      "after_voicemail": "Sorry mate, swamped today, let me come back to you tomorrow with times.",
+      "objection": "Don't worry, the photos don't do it justice."
+    },
+    "notes": "Says yes to everything, delivers on about half. Big optimism, small follow-through."
+  },
+  {
+    "id": "AG004",
+    "agent_name": "Helen Okafor",
+    "agency": "Northcote Residential",
+    "phone": "+44 20 7946 0044",
+    "email": "h.okafor@northcote.demo",
+    "persona": "the_lazy_but_eventual",
+    "behaviour": {
+      "response_delay_hours": 36,
+      "ghost_probability": 0.20,
+      "honesty_score": 0.80,
+      "follow_ups_required_to_get_reply": 2,
+      "responds_to_voicemail": true,
+      "viewings_kept_rate": 0.85
+    },
+    "templates": {
+      "first_response": "Apologies for the delay — yes still available. Can you do Saturday morning?",
+      "objection": "Landlord is firm on the asking. Sorry."
+    },
+    "notes": "Slow but reliable when she does respond. Honest. Keeps viewings."
+  },
+  {
+    "id": "AG005",
+    "agent_name": "James Cole",
+    "agency": "Cole & Sons",
+    "phone": "+44 20 7946 0055",
+    "email": "james@coleandsons.demo",
+    "persona": "the_hard_seller",
+    "behaviour": {
+      "response_delay_hours": 1,
+      "ghost_probability": 0.05,
+      "honesty_score": 0.50,
+      "follow_ups_required_to_get_reply": 1,
+      "responds_to_voicemail": true,
+      "viewings_kept_rate": 0.90
+    },
+    "templates": {
+      "first_response": "Hi Stephen — I have something even better than the one you asked about, can I send through?",
+      "objection": "Trust me, this one will go today, do you want it?"
+    },
+    "notes": "Fast, persistent, but always upselling. Pushes inferior properties. Honesty mid."
+  },
+  {
+    "id": "AG006",
+    "agent_name": "Olivia Sterling",
+    "agency": "Mayfair Residences",
+    "phone": "+44 20 7946 0066",
+    "email": "olivia.sterling@mayfair-res.demo",
+    "persona": "the_premium_gatekeeper",
+    "behaviour": {
+      "response_delay_hours": 6,
+      "ghost_probability": 0.10,
+      "honesty_score": 0.85,
+      "follow_ups_required_to_get_reply": 1,
+      "responds_to_voicemail": true,
+      "viewings_kept_rate": 0.95
+    },
+    "templates": {
+      "first_response": "Good afternoon. We require proof of funds and references upfront. Once received, we can offer a viewing.",
+      "objection": "The landlord requires a 12-month minimum and 6 weeks deposit."
+    },
+    "notes": "Professional, picky, accurate. High friction but no surprises later."
+  },
+  {
+    "id": "AG007",
+    "agent_name": "Rob Mason",
+    "agency": "Mason & Co",
+    "phone": "+44 20 7946 0077",
+    "email": "rob@masonco.demo",
+    "persona": "the_bait_and_switch",
+    "behaviour": {
+      "response_delay_hours": 4,
+      "ghost_probability": 0.15,
+      "honesty_score": 0.30,
+      "follow_ups_required_to_get_reply": 1,
+      "responds_to_voicemail": true,
+      "viewings_kept_rate": 0.75
+    },
+    "templates": {
+      "first_response": "Hi! Available, however the price has gone up to £X — you can still view if interested.",
+      "objection": "Lots of demand, the listing was a bit out of date, sorry."
+    },
+    "notes": "Always £100-200/mo more than the listing. Listing details often differ from reality. Lettr should rank him low on honesty."
+  },
+  {
+    "id": "AG008",
+    "agent_name": "Aisha Khan",
+    "agency": "Bramble & Vine",
+    "phone": "+44 20 7946 0088",
+    "email": "aisha.khan@brambleandvine.demo",
+    "persona": "the_helpful_junior",
+    "behaviour": {
+      "response_delay_hours": 3,
+      "ghost_probability": 0.10,
+      "honesty_score": 0.90,
+      "follow_ups_required_to_get_reply": 1,
+      "responds_to_voicemail": true,
+      "viewings_kept_rate": 0.90
+    },
+    "templates": {
+      "first_response": "Hi Stephen — let me check with my manager and come back to you within the hour with a couple of times.",
+      "objection": "Let me check with my manager, sorry, I'm new."
+    },
+    "notes": "Eager, honest, slightly slower because she checks with seniors. Keeps appointments."
+  }
+]
